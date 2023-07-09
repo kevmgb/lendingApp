@@ -21,7 +21,7 @@ public class LoanRequest {
     private String msisdn;
 
     @NotNull
-    @DecimalMin("${minimum.loan.amount}")
-    @DecimalMax("${maximum.loan.amount}")
+    @DecimalMin(value = "100.00")
+    @DecimalMax(value = "100000.00")
     private BigDecimal amount;
 }

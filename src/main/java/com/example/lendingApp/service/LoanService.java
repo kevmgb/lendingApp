@@ -18,6 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LoanService {
     private final LoanRepository loanRepository;
+    private final NotificationService notificationService;
 
     public ResponseEntity<Response> requestLoan(LoanRequest request) {
         // Check if the user already has an active loan
@@ -37,6 +38,8 @@ public class LoanService {
         loan.setStatus(LoanStatus.ACTIVE);
         loan.setRepaymentAmount(BigDecimal.ZERO); // On creation of loan record, repayment amount is set to initial value of zero
         loanRepository.save(loan);
+
+        notificationService.sendSMS(loan.getMsisdn(), "Dear client, your loan request of " + loan.getAmount() + " has been successfully granted.");
 
         return ResponseEntity
                 .ok(new Response(
@@ -77,6 +80,17 @@ public class LoanService {
             existingLoan.get().setStatus(LoanStatus.REPAID);
         }
         loanRepository.save(existingLoan.get());
+
+        String smsMessage = "Dear client, your loan repayment request of amount " + request.getRepaymentAmount() + " has been successfully processed.";
+
+        if (existingLoan.get().getStatus().equals(LoanStatus.REPAID))
+        {
+            smsMessage += " Your loan is fully settled.";
+
+        }
+
+        notificationService.sendSMS(existingLoan.get().getMsisdn(), smsMessage);
+
         return ResponseEntity.ok(new Response(
                 "Your loan repayment request has been processed successfully.",
                 new LoanPojo(existingLoan.get().getMsisdn(), existingLoan.get().getAmount(), existingLoan.get().getRepaymentAmount())));

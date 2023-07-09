@@ -1,5 +1,6 @@
 package com.example.lendingApp.controller;
 
+import com.example.lendingApp.model.request.LoanRepaymentRequest;
 import com.example.lendingApp.model.request.LoanRequest;
 import com.example.lendingApp.model.response.Response;
 import com.example.lendingApp.service.LoanService;
@@ -12,13 +13,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/v1/")
+@RequestMapping("api/v1/loan")
 @RequiredArgsConstructor
 public class LoanController {
     private final LoanService loanService;
 
-    @PostMapping("/loan-requests")
+    @PostMapping("/requests")
     public ResponseEntity<Response> loanRequest(@RequestBody @Validated LoanRequest request) {
         return loanService.requestLoan(request);
+    }
+
+    @PostMapping("/repayments")
+    public ResponseEntity<Response> repayLoan(@RequestBody @Validated LoanRepaymentRequest request) {
+        return loanService.repayLoan(request);
     }
 }

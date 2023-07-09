@@ -3,6 +3,7 @@ package com.example.lendingApp.service;
 import com.example.lendingApp.entity.Loan;
 import com.example.lendingApp.enums.LoanStatus;
 import com.example.lendingApp.model.pojo.LoanPojo;
+import com.example.lendingApp.model.request.LoanRepaymentRequest;
 import com.example.lendingApp.model.request.LoanRequest;
 import com.example.lendingApp.model.response.Response;
 import com.example.lendingApp.repository.LoanRepository;
@@ -41,5 +42,43 @@ public class LoanService {
                 .ok(new Response(
                         "Your loan request has been processed successfully.",
                         new LoanPojo(loan.getMsisdn(), loan.getAmount(), loan.getRepaymentAmount())));
+    }
+
+    public ResponseEntity<Response> repayLoan(LoanRepaymentRequest request) {
+        // Check if user has an active loan
+        Optional<Loan> existingLoan = loanRepository
+                .findByMsisdnAndStatus(request.getMsisdn(), LoanStatus.ACTIVE);
+
+        if (existingLoan.isEmpty()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new Response(
+                            "No active loan found for the provided msisdn", null));
+        }
+
+        // Calculate outstanding loan balance
+        BigDecimal outstandingBalance = existingLoan.get().getAmount().subtract(existingLoan.get().getRepaymentAmount());
+
+        // Verify that repayment request doesn't exceed outstanding balance
+        if (request.getRepaymentAmount().compareTo(outstandingBalance) > 0) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new Response(
+                            "Repayment amount exceeds outstanding balance",
+                            new LoanPojo(existingLoan.get().getMsisdn(),
+                                    existingLoan.get().getAmount(), existingLoan.get().getRepaymentAmount())));
+        }
+
+        // Update outstanding loan balance
+        existingLoan.get().setRepaymentAmount(existingLoan.get().getRepaymentAmount().add(request.getRepaymentAmount()));
+
+        // Check if loan has been full repaid
+        if (existingLoan.get().getRepaymentAmount().compareTo(existingLoan.get().getAmount()) == 0) {
+            existingLoan.get().setStatus(LoanStatus.REPAID);
+        }
+        loanRepository.save(existingLoan.get());
+        return ResponseEntity.ok(new Response(
+                "Your loan repayment request has been processed successfully.",
+                new LoanPojo(existingLoan.get().getMsisdn(), existingLoan.get().getAmount(), existingLoan.get().getRepaymentAmount())));
     }
 }

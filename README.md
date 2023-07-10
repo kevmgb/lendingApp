@@ -49,5 +49,4 @@ Once service is running, use the link http://localhost:8080/swagger-ui/index.htm
 
 ## Usage
 
-Use the collection below to access the api.
-https://api.postman.com/collections/8144754-e657b7b6-bafd-4c89-8aae-80c8713edf68?access_key=PMAT-01H4XWKEB3S14ZQ5N4DXTEV2SQ
+Use the collection in the static folder to interact with the service
